@@ -1,0 +1,129 @@
+---
+- include: "{{ ansible_os_family }}-setup.yml"
+  tags:
+    - jira
+    - jira-packages
+    - jira-update
+
+- name: Create system group
+  group:
+    name: "{{ jira_group }}"
+  tags:
+    - jira
+    - jira-account
+
+- name: Create system user
+  user:
+    name: "{{ jira_user }}"
+    group: "{{ jira_group }}"
+    home: "{{ jira_homedir }}"
+  tags:
+    - jira
+    - jira-account
+
+- name: Set-up data-dir
+  file:
+    name: "{{ jira_workdir }}/{{ jira_version }}"
+    owner: "{{ jira_user  }}"
+    group: "{{ jira_group }}"
+    state: directory
+  tags:
+    - jira
+    - jira-update
+
+- name: Install JIRA Software
+  unarchive:
+    src: "{{ jira_url }}"
+    dest: "{{ jira_workdir }}/{{ jira_version }}"
+    owner: "{{ jira_user }}"
+    group: "{{ jira_group }}"
+    extra_opts: "--strip-components=1"
+    remote_src: yes
+    creates: "{{ jira_workdir }}/{{ jira_version }}/bin/start-jira.sh"
+  tags:
+    - jira
+    - jira-update
+
+- name: Set ownership on related directories
+  file:
+    path: "{{ item }}"
+    owner: "{{ jira_user }}"
+    group: "{{ jira_group }}"
+    recurse: yes
+    state: directory
+  with_items:
+    - "{{ jira_homedir }}"
+    - "{{ jira_workdir }}"
+  tags:
+    - jira
+    - jira-config
+    - jira-update
+
+- name: Define home directory
+  lineinfile:
+    path: '{{ jira_workdir }}/{{ jira_version }}/atlassian-jira/WEB-INF/classes/jira-application.properties'
+    regexp: '^jira.home ='
+    line: 'jira.home = {{ jira_homedir }}'
+  tags:
+    - jira
+    - jira-config
+    - jira-update
+
+- name: Override JAVA version check pattern
+  replace:
+    path: '{{ jira_workdir }}/{{ jira_version }}/bin/check-java.sh'
+    regexp: 'java\ version'
+    replace: 'openjdk version'
+    backup: yes
+  tags:
+    - jira
+    - jira-config
+    - jira-update
+
+- name: Deploy config files
+  template:
+    src: server.xml.j2
+    dest: "{{ jira_workdir }}/{{ jira_version }}/conf/server.xml"
+    backup: yes
+    owner: "{{ jira_user }}"
+    group: "{{ jira_group }}"
+    mode: "0664"
+  notify: Restart jira
+  tags: 
+    - jira
+    - jira-config
+    - jira-update
+
+- name: Deploy database config
+  template:
+    src: dbconfig.xml.j2
+    dest: "{{ jira_homedir }}/dbconfig.xml"
+    owner: "{{ jira_user }}"
+    group: "{{ jira_group }}"
+    mode: "0664"
+  notify: Restart jira
+  tags:
+    - jira
+    - jira-config
+    - jira-properties
+    - jira-update
+
+- name: Deploy systemd unit file
+  template:
+    src: systemd.service.j2
+    dest: /usr/lib/systemd/system/jira.service
+    owner: root
+    group: root
+  notify: Reload systemd and jira
+  tags:
+    - jira
+    - jira-update
+    - jira-service
+
+- name: Enable service
+  service:
+    name: jira
+    enabled: yes
+  notify: Restart jira
+  tags:
+    - jira

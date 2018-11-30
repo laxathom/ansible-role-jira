@@ -1,0 +1,76 @@
+<?xml version="1.0" encoding="utf-8"?>
+<!--
+  Licensed to the Apache Software Foundation (ASF) under one or more
+  contributor license agreements.  See the NOTICE file distributed with
+  this work for additional information regarding copyright ownership.
+  The ASF licenses this file to You under the Apache License, Version 2.0
+  (the "License"); you may not use this file except in compliance with
+  the License.  You may obtain a copy of the License at
+
+      http://www.apache.org/licenses/LICENSE-2.0
+
+  Unless required by applicable law or agreed to in writing, software
+  distributed under the License is distributed on an "AS IS" BASIS,
+  WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+  See the License for the specific language governing permissions and
+  limitations under the License.
+
+  {{ ansible_managed }}
+-->
+<Server port="{{ jira_server_port }}" shutdown="SHUTDOWN">
+    <Listener className="org.apache.catalina.startup.VersionLoggerListener"/>
+    <Listener className="org.apache.catalina.core.AprLifecycleListener" SSLEngine="on"/>
+    <Listener className="org.apache.catalina.core.JreMemoryLeakPreventionListener"/>
+    <Listener className="org.apache.catalina.mbeans.GlobalResourcesLifecycleListener"/>
+    <Listener className="org.apache.catalina.core.ThreadLocalLeakPreventionListener"/>
+    <Service name="Catalina">
+        <Connector port="{{ jira_connector_port }}" protocol="HTTP/1.1"
+                   relaxedPathChars="[]|"
+                   relaxedQueryChars="[]|{}^&#x5c;&#x60;&quot;&lt;&gt;"
+                   maxThreads="{{ jira_max_threads }}"
+                   minSpareThreads="{{ jira_min_sparethreads }}"
+                   enableLookups="{{ jira_lookups }}"
+                   maxHttpHeaderSiz="{{ jira_max_http_headersize }}"
+                   acceptCount="{{ jira_accept_count }}"
+                   disableUploadTimeout="{{ jira_disable_upload_timeout }}"
+                   connectionTimeout="{{ jira_connection_timeout }}"
+                   useBodyEncodingForURI="true"
+                   redirectPort="{{ jira_connector_redirect_port }}"
+                   compression="on"
+                   compressableMimeType="text/html,text/xml,text/plain,text/css,application/json,application/javascript,application/x-javascript"
+{% if jira_proxy_name is defined and jira_scheme in ["http", "https"] %} 
+                   proxyName="{{ jira_proxy_name }}"
+                   scheme="{{ jira_scheme }}"
+{% if jira_scheme == "http" %}
+                   proxyPort="80"
+{% elif jira_scheme == "https" %}
+                   proxyPort="443"
+                   secure="true"{% endif %}{% endif %}/>
+        <Engine name="Catalina" defaultHost="{{ jira_hostname }}">
+            <Realm className="org.apache.catalina.realm.LockOutRealm">
+                <Realm className="org.apache.catalina.realm.UserDatabaseRealm"
+                       resourceName="UserDatabase"/>
+            </Realm>
+            <Host name="{{ jira_hostname }}" appBase="webapps"
+                  unpackWARs="true"
+                  autoDeploy="true"
+                  xmlValidation="false"
+                  xmlNamespaceAware="false">
+                <Context docBase="${catalina.home}/atlassian-jira"
+                         path="{{ jira_context_path | default('') }}"
+                         reloadable="false"
+                         useHttpOnly="true">
+                    <Resource name="UserTransaction"
+                              auth="Container"
+                              type="javax.transaction.UserTransaction"
+                              factory="org.objectweb.jotm.UserTransactionFactory"
+                              jotm.timeout="60"/>
+                    <Manager pathname=""/>
+                    <JarScanner scanManifest="false"/>
+                </Context>
+            </Host>
+            <Valve className="org.apache.catalina.valves.AccessLogValve"
+                   pattern="%a %{jira.request.id}r %{jira.request.username}r %t &quot;%m %U%q %H&quot; %s %b %D &quot;%{Referer}i&quot; &quot;%{User-Agent}i&quot; &quot;%{jira.request.assession.id}r&quot;"/>
+        </Engine>
+    </Service>
+</Server>

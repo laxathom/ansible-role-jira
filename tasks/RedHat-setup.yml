@@ -1,0 +1,36 @@
+---
+- name: Install common dependencies
+  yum:
+    name: "{{ item }}"
+    state: installed
+  with_items:
+    - git
+  tags:
+    - jira
+    - jira-update
+
+- name: Install JAVA requirements
+  package:
+    name: "{{ item }}"
+    state: installed
+  when: jira_java_install
+  with_items:
+    - "java-{{ jira_java_version }}-openjdk"
+    - "java-{{ jira_java_version }}-openjdk-devel"
+  tags:
+    - jira
+    - jira-update
+
+- shell: jrunscript -e 'java.lang.System.out.println(java.lang.System.getProperty("java.home"));'
+  register: java_home
+  when: jira_java_install
+  tags:
+    - jira
+    - jira-update
+
+- set_fact:
+    jira_java_home: '{{ java_home.stdout }}'
+  when: jira_java_install
+  tags:
+    - jira
+    - jira-upate

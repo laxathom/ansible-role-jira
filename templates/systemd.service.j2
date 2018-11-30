@@ -1,0 +1,19 @@
+{# Unit file based on: https://github.com/bparsons/atlassian-systemd #}
+[Unit]
+Description=Jira Software
+After=syslog.target network.target
+
+[Service]
+Type=forking
+
+User={{ jira_user }}
+Group={{ jira_group }}
+
+Environment="JRE_HOME={{ jira_java_home }}" "JIRA_HOME={{ jira_homedir }}"
+
+PIDFile={{ jira_workdir }}/{{ jira_version }}/work/catalina.pid
+ExecStart={{ jira_workdir }}/{{ jira_version }}/bin/start-jira.sh
+ExecStop={{ jira_workdir }}/{{ jira_version }}/bin/stop-jira.sh
+
+[Install]
+WantedBy=multi-user.target

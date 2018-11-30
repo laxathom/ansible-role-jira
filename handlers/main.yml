@@ -1,0 +1,11 @@
+---
+- name: Reload systemd and jira
+  systemd:
+    name: jira
+    state: restarted
+    daemon_reload: yes
+
+- name: Restart jira
+  service:
+    name: jira
+    state: restarted

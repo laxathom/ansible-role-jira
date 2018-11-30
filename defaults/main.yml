@@ -1,0 +1,51 @@
+---
+jira_java_install: true
+jira_java_version: "1.8.0"
+jira_java_home: "/usr/bin/java"
+
+jira_group: "atlassian"
+jira_user: "jira"
+jira_homedir: "/var/lib/jira"
+jira_workdir: "/srv/jira"
+jira_configdir: '{{ jira_workdir }}/conf'
+
+jira_version: "7.12.0"
+jira_archive: "atlassian-jira-software-{{ jira_version }}.tar.gz"
+jira_url: "https://downloads.atlassian.com/software/jira/downloads/{{ jira_archive }}"
+
+jira_hostname: "localhost"
+jira_max_threads: 150
+jira_min_sparethreads: 25
+jira_lookups: 'false'
+jira_max_http_headersize: 8192
+jira_accept_count: 100
+jira_disable_upload_timeout: 'true'
+jira_server_port: "8006"
+jira_connector_port: "7990"
+jira_connector_redirect_port: "8443"
+jira_connection_timeout: "20000"
+#jira_context_path: "~"
+jira_jvm_minimum_memory: "512m"
+jira_jvm_maximum_memory: "1024m"
+jira_jvm_support_recommended_args: "-Datlassian.plugins.enable.wait=300"
+jira_proxy_name: "~"
+jira_scheme: "~"
+
+jira_db_engine: 'builtin'
+jira_db_hostname: localhost
+jira_db_port: 666
+jira_db_name: jira
+jira_db_user: "sa"
+jira_db_passwd: ""
+jira_db_pool_min: 20
+jira_db_pool_max: 20
+jira_db_pool_wait: 30000
+jira_db_pool_idle: 20
+
+jira_properties: {}
+# Examples:
+#    throttle.resource.scm-command: 25
+#    throttle.resource.scm-command.timeout: 2
+#    throttle.resource.scm-hosting: 1.5*${scaling.concurrency}
+#    throttle.resource.scm-hosting.timeout: 150
+#    server.busy.on.ticket.rejected.within: 2
