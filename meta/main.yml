@@ -1,5 +1,6 @@
 galaxy_info:
   author: Xavier Lamien
+  role_name: jira
   description: Ansible role to install and manage JIRA Server
   company: iFeelSmart
 
